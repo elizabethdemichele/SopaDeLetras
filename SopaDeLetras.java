@@ -194,4 +194,14 @@ public class SopaDeLetras extends JFrame {
         panelTablero.revalidate();
         panelTablero.repaint();
     }
+
+    /**
+    * Llama a la aplicación.
+    */
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> {
+            SopaDeLetras app = new SopaDeLetras();
+            app.setVisible(true);
+        });
+    }
 }
