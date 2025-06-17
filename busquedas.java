@@ -1,7 +1,7 @@
 /**
  * Búsqueda en profundidad (DFS) para encontrar una palabra.
  */
-private boolean dfsSearch(String palabra, int fila, int col, int indice, boolean[][] visitados) {
+private boolean busquedaDFS(String palabra, int fila, int col, int indice, boolean[][] visitados) {
     if (indice == palabra.length()) {
         return true;
     }
@@ -48,7 +48,7 @@ private static class NodoBFS {
 /**
  * Búsqueda en anchura (BFS) para encontrar una palabra.
  */
-private boolean bfsSearch(String palabra, int filaInicial, int columnaInicial) {
+private boolean busquedaBFS(String palabra, int filaInicial, int columnaInicial) {
     Queue<NodoBFS> queue = new LinkedList<>();
     queue.add(new NodoBFS(filaInicial, columnaInicial, 0, null));
 
