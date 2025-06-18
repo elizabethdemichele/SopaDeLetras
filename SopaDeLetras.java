@@ -180,28 +180,96 @@ public class SopaDeLetras extends JFrame {
      * Muestra el tablero en el panel correspondiente.
      */
     private void mostrarTablero() {
+        // Primero asegurar que el tablero esté vacío
         panelTablero.removeAll();
-        
         for (int row = 0; row < 4; row++) {
             for (int col = 0; col < 4; col++) {
+                // Mostrar valor en la posición del tablero guardado
                 JLabel label = new JLabel(String.valueOf(tablero[row][col]), SwingConstants.CENTER);
                 label.setFont(new Font("Arial", Font.BOLD, 24));
                 label.setBorder(BorderFactory.createLineBorder(Color.BLACK));
                 panelTablero.add(label);
             }
         }
-        
         panelTablero.revalidate();
         panelTablero.repaint();
     }
-
+    
     /**
-    * Llama a la aplicación.
-    */
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> {
-            SopaDeLetras app = new SopaDeLetras();
-            app.setVisible(true);
-        });
+     * Busca todas las palabras del diccionario en el tablero.
+     */
+    private void buscarTodasFun() {
+        // Verificar que tengamos un tablero y un diccionario
+        if (tablero == null || diccionario == null) {
+            JOptionPane.showMessageDialog(this, "Primero cargue un archivo con el tablero y diccionario.", 
+                "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        // Obtener el método a emplearse en la búsqueda
+        String metodo = (String) metodoBusqueda.getSelectedItem();
+        salida.append("\nBuscando todas las palabras usando " + metodo + "...\n");
+        // Iniciar un set con las palabras encontradas y guardar el tiempo inicial
+        Set<String> palabrasEncontradas = new HashSet<>();
+        long tiempoInicial = System.currentTimeMillis();
+        // Iterar por cada palabra en el diccionario y buscarla
+        for (String palabra : diccionario) {
+            if (buscarPalabra(palabra, metodo.equals("BFS"))) {
+                palabrasEncontradas.add(palabra);
+            }
+        }
+        // Guardar la duración de la búsqueda
+        long tiempoFinal = System.currentTimeMillis();
+        long duracion = tiempoFinal - tiempoInicial;
+        tiempo.setText("Tiempo: " + duracion + " ms");
+        // Imprimir el resultado de la búsqueda
+        salida.append("Palabras encontradas (" + palabrasEncontradas.size() + "):\n");
+        for (String palabra : palabrasEncontradas) {
+            salida.append(palabra + "\n");
+        }
+        // Mostrar la duración de la búsqueda
+        salida.append("Tiempo total: " + duracion + " ms\n");
+    }
+    
+    /**
+     * Busca una palabra específica en el tablero.
+     */
+    private void buscarPalabraFun() {
+        // Verificar que se tenga un tablero y un diccionario
+        if (tablero == null || diccionario == null) {
+            JOptionPane.showMessageDialog(this, "Primero cargue un archivo con el tablero y diccionario.", 
+                "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        // Verificar que la palabra a buscar no sea vacía
+        String palabra = palabraParaBuscar.getText().trim().toUpperCase();
+        if (palabra.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Ingrese una palabra para buscar.", 
+                "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        // Obtener el método de búsqueda
+        String metodo = (String) metodoBusqueda.getSelectedItem();
+        salida.append("\nBuscando la palabra '" + palabra + "' usando " + metodo + "...\n");
+        // Buscar la palabra y guardar la duración de la búsqueda
+        long tiempoInicial = System.currentTimeMillis();
+        boolean encontrada = buscarPalabra(palabra, metodo.equals("BFS"));
+        long tiempoFinal = System.currentTimeMillis();
+        long duracion = tiempoFinal - tiempoInicial;
+        tiempo.setText("Tiempo: " + duracion + " ms");
+        // Imprimir los resultados de la búsqueda
+        if (encontrada) {
+            salida.append("La palabra '" + palabra + "' fue encontrada en el tablero.\n");
+            if (!diccionario.contains(palabra)) {
+                diccionario.add(palabra);
+                salida.append("La palabra '" + palabra + "' ha sido agregada al diccionario.\n");
+            }
+            // Mostrar árbol de recorrido BFS si se usó ese método
+            if (metodo.equals("BFS")) {
+                mostrarArbol(palabra);
+            }
+        } else {
+            salida.append("La palabra '" + palabra + "' NO fue encontrada en el tablero.\n");
+        }
+        salida.append("Tiempo de búsqueda: " + duracion + " ms\n");
     }
 }
