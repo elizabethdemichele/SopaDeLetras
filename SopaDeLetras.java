@@ -6,10 +6,6 @@ import java.awt.*;
 import java.io.*;
 import java.util.*;
 import java.util.List;
-import org.graphstream.graph.*;
-import org.graphstream.graph.implementations.*;
-import org.graphstream.ui.swing_viewer.ViewPanel;
-import org.graphstream.ui.view.Viewer;
 
 /**
  * Aplicación para buscar palabras en una sopa de letras usando DFS o BFS.
