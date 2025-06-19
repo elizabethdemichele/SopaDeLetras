@@ -272,4 +272,92 @@ public class SopaDeLetras extends JFrame {
         }
         salida.append("Tiempo de búsqueda: " + duracion + " ms\n");
     }
+    
+    /**
+     * Busca una palabra en el tablero usando DFS o BFS.
+     * @param palabra Palabra a buscar
+     * @param usarBFS True para usar BFS, false para DFS
+     * @return True si la palabra fue encontrada
+     */
+    private boolean buscarPalabra(String palabra, boolean usarBFS) {
+        // Verificar que la palabra no sea vacía
+        if (palabra == null || palabra.isEmpty())
+            return false;
+        char primeraLetra = palabra.charAt(0);
+        // Encontrar letra que coincida con la primera letra de la palabra
+        for (int row = 0; row < 4; row++) {
+            for (int col = 0; col < 4; col++) {
+                if (tablero[row][col] == primeraLetra) {
+                    // Usar método BFS si ese es el indicado
+                    if (usarBFS) {
+                        if (busquedaBFS(palabra, row, col)) {
+                            return true;
+                        }
+                    } else {
+                        // Usar método DFS de lo contrario
+                        boolean[][] visitados = new boolean[4][4];
+                        if (busquedaDFS(palabra, row, col, 0, visitados)) {
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+        // Retornar falso si no se pudo encontrar la palabra
+        return false;
+    }
+    
+    /**
+    * Búsqueda en profundidad (DFS) para encontrar una palabra.
+    */
+   private boolean busquedaDFS(String palabra, int fila, int col, int index, boolean[][] visitados) {
+       if (index == palabra.length()) {
+           return true;
+       }
+       if (fila < 0 || fila >= 4 || col < 0 || col >= 4 || visitados[fila][col] || 
+           tablero[fila][col] != palabra.charAt(index)) {
+           return false;
+       }
+       visitados[fila][col] = true;
+       // Explorar los 8 vecinos posibles
+       for (int r = fila - 1; r <= fila + 1; r++) {
+           for (int c = col - 1; c <= col + 1; c++) {
+               if (r == fila && c == col) continue;
+               if (busquedaDFS(palabra, r, c, index + 1, visitados)) {
+                   return true;
+               }
+           }
+       }
+       visitados[fila][col] = false;
+       return false;
+   }
+
+    /**
+    * Búsqueda en anchura (BFS) para encontrar una palabra.
+    */
+   private boolean busquedaBFS(String palabra, int filaInicial, int columnaInicial) {
+       Queue<NodoBFS> cola = new LinkedList<>();
+       cola.add(new NodoBFS(filaInicial, columnaInicial, 0, null));
+
+       while (!cola.isEmpty()) {
+           NodoBFS nodoActual = cola.poll();
+
+           if (nodoActual.indice == palabra.length() - 1) {
+               return true;
+           }
+
+           // Explorar los 8 vecinos posibles
+           for (int r = Math.max(0, nodoActual.fila - 1); r <= Math.min(3, nodoActual.fila + 1); r++) {
+               for (int c = Math.max(0, nodoActual.col - 1); c <= Math.min(3, nodoActual.col + 1); c++) {
+                   if (r == nodoActual.fila && c == nodoActual.col) continue;
+
+                   if (tablero[r][c] == palabra.charAt(nodoActual.indice + 1)) {
+                       cola.add(new NodoBFS(r, c, nodoActual.indice + 1, nodoActual));
+                   }
+               }
+           }
+       }
+
+       return false;
+   }
 }
