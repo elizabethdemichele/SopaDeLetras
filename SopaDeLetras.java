@@ -6,6 +6,10 @@ import java.awt.*;
 import java.io.*;
 import java.util.*;
 import java.util.List;
+import org.graphstream.graph.*;
+import org.graphstream.graph.implementations.*;
+import org.graphstream.ui.swing_viewer.ViewPanel;
+import org.graphstream.ui.view.Viewer;
 
 /**
  * Aplicación para buscar palabras en una sopa de letras usando DFS o BFS.
@@ -360,8 +364,8 @@ public class SopaDeLetras extends JFrame {
 
        return false;
    }
-
-   /**
+    
+    /**
     * Muestra una representación visual del árbol de recorrido BFS
     * en la búsqueda de una palabra.
     */
@@ -369,35 +373,36 @@ public class SopaDeLetras extends JFrame {
        // Verificar que la palabra no sea vacía
        if (palabra == null || palabra.isEmpty())
            return;
-       // Obtener la primera letra de la búsqueda
+       // Configuración inicial del sistema GraphStream
+       System.setProperty("org.graphstream.ui", "swing");
+       System.setProperty("org.graphstream.ui.renderer", "org.graphstream.ui.j2dviewer.J2DGraphRenderer");
+       // Crear el grafo principal que contendrá todos los subárboles
+       Graph graph = new MultiGraph("BFS Tree");
+       graph.setAttribute("ui.stylesheet", 
+           "node {" +
+           "   fill-color: #4682B4;" +
+           "   size: 40px;" +
+           "   text-alignment: center;" +
+           "   text-size: 14px;" +
+           "   text-style: bold;" +
+           "   text-color: white;" +
+           "}" +
+           "edge {" +
+           "   fill-color: #777;" +
+           "   size: 2px;" +
+           "}");
        char primeraLetra = palabra.charAt(0);
-       // Iterar por el tablero
+       boolean encontrado = false;
+       // Iterar por el tablero para encontrar todas las posiciones iniciales posibles
        for (int row = 0; row < 4; row++) {
            for (int col = 0; col < 4; col++) {
                if (tablero[row][col] == primeraLetra) {
-                   // Configuración inicial del sistema GraphStream
-                   System.setProperty("org.graphstream.ui", "swing");
-                   System.setProperty("org.graphstream.ui.renderer", "org.graphstream.ui.j2dviewer.J2DGraphRenderer");
-                   // Estilos utilizados en el grafo
-                   Graph graph = new SingleGraph("BFS Tree");
-                   graph.setAttribute("ui.stylesheet", 
-                       "node {" +
-                       "   fill-color: #4682B4;" +  // Color azul acero
-                       "   size: 40px;" +           // Tamaño aumentado
-                       "   text-alignment: center;" +
-                       "   text-size: 14px;" +
-                       "   text-style: bold;" +
-                       "   text-color: white;" +    // Texto blanco para mejor contraste
-                       "}" +
-                       "edge {" +
-                       "   fill-color: #777;" +     // Color gris para las aristas
-                       "   size: 2px;" +
-                       "}");
+                   encontrado = true;
                    // Configurar la estructura para BFS
                    Queue<NodoBFS> cola = new LinkedList<>();
                    Set<String> visitados = new HashSet<>();
                    // Crear nodo raíz con su etiqueta
-                   String idRaiz = String.format("%d,%d", row, col);
+                   String idRaiz = String.format("%d-%d-%d,%d", row, col, row, col);
                    Node raiz = graph.addNode(idRaiz);
                    raiz.setAttribute("ui.label", String.format("(%d,%d)\n%c", row, col, primeraLetra));
                    cola.add(new NodoBFS(row, col, 0, null));
@@ -418,17 +423,14 @@ public class SopaDeLetras extends JFrame {
                            for (int c = Math.max(0, nodoActual.col - 1); c <= Math.min(3, nodoActual.col + 1); c++) {
                                if (r == nodoActual.fila && c == nodoActual.col)
                                    continue;
-                               // Revisar si el nodo visitado es igual al siguiente caracter
+                               // Revisar si el vecino corresponde a la siguiente letra
                                if (tablero[r][c] == nextChar) {
-                                   String idNodo = String.format("%d,%d", r, c);
-                                   // Chequear si no se ha visitado el nodo
+                                   String idNodo = String.format("%d-%d-%d,%d", row, col, r, c);
+                                   // Revisar si no se ha visitado el nodo
                                    if (!visitados.contains(idNodo)) {
-                                       // Añadir nodo con su etiqueta si no se ha visitado
                                        Node nodo = graph.addNode(idNodo);
                                        nodo.setAttribute("ui.label", String.format("(%d,%d)\n%c", r, c, nextChar));
-                                       // Registrar la relación padre-hijo
-                                       padreDe.put(idNodo, String.format("%d,%d", nodoActual.fila, nodoActual.col));
-                                       // Añadir a la cola y marcar como visitado
+                                       padreDe.put(idNodo, String.format("%d-%d-%d,%d", row, col, nodoActual.fila, nodoActual.col));
                                        cola.add(new NodoBFS(r, c, nodoActual.indice + 1, nodoActual));
                                        visitados.add(idNodo);
                                    }
@@ -440,27 +442,107 @@ public class SopaDeLetras extends JFrame {
                    for (Map.Entry<String, String> entry : padreDe.entrySet()) {
                        String hijo = entry.getKey();
                        String padre = entry.getValue();
-                       graph.addEdge(padre + "-" + hijo, padre, hijo);
+                       graph.addEdge(padre + "-" + hijo, padre, hijo, true);
                    }
-                   // Insertar el grafo en un cuadro JDialog
-                   JDialog dialogoGrafico = new JDialog(this, "Árbol de Recorrido BFS - Palabra: " + palabra, true);
-                   dialogoGrafico.setSize(800, 800);  // Tamaño aumentado para mejor visualización
-                   Viewer viewer = graph.display();
-                   ViewPanel viewPanel = (ViewPanel) viewer.getDefaultView();
-                   // Botón de cierre de la visualización del árbol
-                   JButton botonCierre = new JButton("Cerrar Visualización");
-                   botonCierre.addActionListener(e -> dialogoGrafico.dispose());
-                   JPanel panel = new JPanel(new BorderLayout());
-                   panel.add(viewPanel, BorderLayout.CENTER);
-                   panel.add(botonCierre, BorderLayout.SOUTH);
-                   // Mostrar el grafo
-                   dialogoGrafico.add(panel);
-                   dialogoGrafico.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
-                   dialogoGrafico.setLocationRelativeTo(this);
-                   dialogoGrafico.setVisible(true);
-                   return;
                }
            }
        }
+       if (!encontrado) {
+           JOptionPane.showMessageDialog(this, "La primera letra de la palabra no se encuentra en el tablero.", 
+               "Error", JOptionPane.ERROR_MESSAGE);
+           return;
+       }
+       // Insertar el grafo en un cuadro JDialog
+       JDialog dialogoGrafico = new JDialog(this, "Árbol de Recorrido BFS - Palabra: " + palabra, true);
+       dialogoGrafico.setSize(800, 800);
+       // Usar un diseño de caja vertical para organizar los componentes
+       JPanel panelPrincipal = new JPanel(new BorderLayout());
+       // Usar el método display() del grafo para crear el visualizador
+       Viewer viewer = graph.display();
+       ViewPanel viewPanel = (ViewPanel) viewer.getDefaultView();
+       // Botón de cierre
+       JButton botonCierre = new JButton("Cerrar Visualización");
+       botonCierre.addActionListener(e -> dialogoGrafico.dispose());
+       panelPrincipal.add(viewPanel, BorderLayout.CENTER);
+       panelPrincipal.add(botonCierre, BorderLayout.SOUTH);
+       dialogoGrafico.add(panelPrincipal);
+       dialogoGrafico.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+       dialogoGrafico.setLocationRelativeTo(this);
+       dialogoGrafico.setVisible(true);
    }
+    
+    /**
+     * Guarda el diccionario actualizado en el archivo original.
+     */
+    private void guardarDicFun() {
+        // Verificar que tenemos un archivo y diccionario cargados
+        if (archivoActual == null || diccionario == null) {
+            JOptionPane.showMessageDialog(this, "No hay diccionario cargado o no se ha seleccionado un archivo.", 
+                "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        try {
+            // Leer el archivo original para preservar el tablero
+            List<String> lineas = new ArrayList<>();
+            boolean enDic = false;
+            try (BufferedReader reader = new BufferedReader(new FileReader(archivoActual))) {
+                String linea;
+                while ((linea = reader.readLine()) != null) {
+                    linea = linea.trim();
+                    if (linea.equals("dic")) {
+                        enDic = true;
+                        lineas.add(linea);
+                        // Agregar todas las palabras del diccionario
+                        for (String palabra : diccionario) {
+                            lineas.add(palabra);
+                        }
+                        // Saltar las líneas hasta /dic
+                        while (!(linea = reader.readLine().trim()).equals("/dic")) {}
+                        lineas.add(linea);
+                        enDic = false;
+                    } else if (!enDic) {
+                        lineas.add(linea);
+                    }
+                }
+            }
+            // Escribir el archivo actualizado
+            try (BufferedWriter writer = new BufferedWriter(new FileWriter(archivoActual))) {
+                for (String linea : lineas) {
+                    writer.write(linea);
+                    writer.newLine();
+                }
+            }
+            salida.append("\nDiccionario guardado correctamente en el archivo.\n");
+        } catch (IOException ex) {
+            JOptionPane.showMessageDialog(this, "Error al guardar el diccionario: " + ex.getMessage(), 
+                "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+    
+    /**
+     * Clase auxiliar para representar nodos en la búsqueda BFS.
+     */
+    private static class NodoBFS {
+        int fila, col;
+        int indice;
+        NodoBFS parent;
+        
+        NodoBFS(int fila, int col, int indice, NodoBFS parent) {
+            this.fila = fila;
+            this.col = col;
+            this.indice = indice;
+            this.parent = parent;
+        }
+    }
+    
+    /**
+     * Función principal del programa; inicia la sopa de letras.
+     * @param args 
+     */
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> {
+            SopaDeLetras app = new SopaDeLetras();
+            app.setVisible(true);
+        });
+    }
 }
