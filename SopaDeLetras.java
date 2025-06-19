@@ -472,52 +472,54 @@ public class SopaDeLetras extends JFrame {
    }
     
     /**
-     * Guarda el diccionario actualizado en el archivo original.
-     */
-    private void guardarDicFun() {
-        // Verificar que tenemos un archivo y diccionario cargados
-        if (archivoActual == null || diccionario == null) {
-            JOptionPane.showMessageDialog(this, "No hay diccionario cargado o no se ha seleccionado un archivo.", 
-                "Error", JOptionPane.ERROR_MESSAGE);
-            return;
-        }
-        try {
-            // Leer el archivo original para preservar el tablero
-            List<String> lineas = new ArrayList<>();
-            boolean enDic = false;
-            try (BufferedReader reader = new BufferedReader(new FileReader(archivoActual))) {
-                String linea;
-                while ((linea = reader.readLine()) != null) {
-                    linea = linea.trim();
-                    if (linea.equals("dic")) {
-                        enDic = true;
-                        lineas.add(linea);
-                        // Agregar todas las palabras del diccionario
-                        for (String palabra : diccionario) {
-                            lineas.add(palabra);
-                        }
-                        // Saltar las líneas hasta /dic
-                        while (!(linea = reader.readLine().trim()).equals("/dic")) {}
-                        lineas.add(linea);
-                        enDic = false;
-                    } else if (!enDic) {
-                        lineas.add(linea);
-                    }
-                }
-            }
-            // Escribir el archivo actualizado
-            try (BufferedWriter writer = new BufferedWriter(new FileWriter(archivoActual))) {
-                for (String linea : lineas) {
-                    writer.write(linea);
-                    writer.newLine();
-                }
-            }
-            salida.append("\nDiccionario guardado correctamente en el archivo.\n");
-        } catch (IOException ex) {
-            JOptionPane.showMessageDialog(this, "Error al guardar el diccionario: " + ex.getMessage(), 
-                "Error", JOptionPane.ERROR_MESSAGE);
-        }
-    }
+    * Guarda el diccionario actualizado en el archivo original.
+    */
+   private void guardarDicFun() {
+       // Verificar que tenemos un archivo y diccionario cargados
+       if (archivoActual == null || diccionario == null) {
+           JOptionPane.showMessageDialog(this, "No hay diccionario cargado o no se ha seleccionado un archivo.", 
+               "Error", JOptionPane.ERROR_MESSAGE);
+           return;
+       }
+       try {
+           // Leer todo el archivo original
+           List<String> lineas = new ArrayList<>();
+           boolean enDic = false;
+           try (BufferedReader reader = new BufferedReader(new FileReader(archivoActual))) {
+               String linea;
+               while ((linea = reader.readLine()) != null) {
+                   linea = linea.trim();
+
+                   if (linea.equals("dic")) {
+                       lineas.add(linea);
+                       // Agregar todas las palabras del diccionario
+                       for (String palabra : diccionario) {
+                           lineas.add(palabra);
+                       }
+                       // Saltar las líneas hasta /dic
+                       while ((linea = reader.readLine()) != null && !linea.trim().equals("/dic")) {}
+                       if (linea != null) {
+                           lineas.add(linea.trim());
+                       }
+                       enDic = false;
+                   } else if (!enDic) {
+                       lineas.add(linea);
+                   }
+               }
+           }
+           // Escribir el archivo actualizado
+           try (BufferedWriter writer = new BufferedWriter(new FileWriter(archivoActual))) {
+               for (String linea : lineas) {
+                   writer.write(linea);
+                   writer.newLine();
+               }
+           }
+           salida.append("\nDiccionario guardado correctamente en el archivo.\n");
+       } catch (IOException ex) {
+           JOptionPane.showMessageDialog(this, "Error al guardar el diccionario: " + ex.getMessage(), 
+               "Error", JOptionPane.ERROR_MESSAGE);
+       }
+   }
     
     /**
      * Clase auxiliar para representar nodos en la búsqueda BFS.
