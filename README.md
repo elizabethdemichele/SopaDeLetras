@@ -11,3 +11,5 @@ Funciona a través de una interfaz gráfica (GUI). El código fuente se estructu
 3. `ManejadorArchivos.java`: se encarga de toda la carga, lectura y guardado de archivos.
 4. `ManejadorGUI.java`: maneja toda la interfaz gráfica a través de la cuargar se cargan/guardan archivos y se indica el método de búsqueda y las palabras a buscar.
 5. `NodoBFS.java`: clase que se usa en la búsqueda BFS.
+
+Este código se encuentra en el siguiente [enlace](https://github.com/elizabethdemichele/SopaDeLetras).
